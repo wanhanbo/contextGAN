@@ -21,14 +21,14 @@ class Generator(nn.Module):
             layers.append(nn.ReLU())
             return layers
 
-        self.l1 = nn.Sequential(nn.Linear(self.noise_dim, 512 * 4 ** 2 ))
+        self.l1 = nn.Sequential(nn.Linear(self.noise_dim, 128 * 4 ** 2 ))
         self.model = nn.Sequential(
             *downsample(channels, 64, normalize=False), # ->64
             *downsample(64, 64), # ->32
             *downsample(64, 128), # ->16
             *downsample(128, 256), # ->8
             *downsample(256, 512), # ->4
-            nn.Conv2d(1024, 4000, 1), # -> 4
+            nn.Conv2d(640, 4000, 1), # -> 4
             *upsample(4000, 512), # -> 8
             *upsample(512, 256), # -> 16
             *upsample(256, 128), # -> 32
@@ -40,7 +40,7 @@ class Generator(nn.Module):
 
     def forward(self, x, z):
         noise = self.l1(z)
-        noise_out = noise.view(noise.shape[0], 512, 4, 4)
+        noise_out = noise.view(noise.shape[0], 128, 4, 4)
         encoder_out = self.model[:14](x)
         encoder_out = torch.cat((encoder_out, noise_out), dim=1)
         out = self.model[14:](encoder_out)

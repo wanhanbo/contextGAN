@@ -21,7 +21,7 @@ from torch.utils.data import DataLoader
 from torchvision import datasets
 from torch.autograd import Variable
 
-from datasets2 import *
+from datasets import *
 from models import *
 
 import torch.nn as nn
@@ -42,7 +42,7 @@ parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of firs
 parser.add_argument("--n_cpu", type=int, default=4, help="number of cpu threads to use during batch generation")
 parser.add_argument("--latent_dim", type=int, default=100, help="dimensionality of the latent space")
 parser.add_argument("--img_size", type=int, default=128, help="size of each image dimension")
-parser.add_argument("--mask_size", type=int, default=112, help="size of random mask")
+parser.add_argument("--mask_size", type=int, default=64, help="size of random mask")
 parser.add_argument("--channels", type=int, default=1, help="number of image channels")
 parser.add_argument("--sample_interval", type=int, default=500, help="interval between image sampling")
 opt = parser.parse_args()
@@ -54,8 +54,7 @@ if not os.path.exists(opt.out_dir):
 cuda = True if torch.cuda.is_available() else False
 
 # Calculate output of image discriminator (PatchGAN)
-# patch_h, patch_w = int(opt.mask_size / 2 ** 3), int(opt.mask_size / 2 ** 3)
-patch_h, patch_w = int(opt.img_size / 2 ** 4), int(opt.img_size / 2 ** 4)
+patch_h, patch_w = int(opt.mask_size / 2 ** 3), int(opt.mask_size / 2 ** 3)
 patch = (1, patch_h, patch_w)
 
 
@@ -158,7 +157,7 @@ for epoch in range(opt.n_epochs):
         g_adv = adversarial_loss(discriminator(gen_imgs), valid)
         # Pixelwise loss
         start_pixel, ms = masked_size
-        start_pixel =opt.img_size - start_pixel[0] # eg:128-112
+        start_pixel = start_pixel[0]
         ms = ms[0]
         gen_imgs_unmasked_parts = gen_imgs.clone()
         # g_pixel = pixelwise_loss(gen_imgs_unmasked_parts[:, :, :start_pixel, :], unmasked_parts[:, :, :start_pixel, :])
@@ -169,10 +168,10 @@ for epoch in range(opt.n_epochs):
         # g_pixel = pixelwise_loss(gen_imgs_unmasked_parts[:, :, :start_pixel, :], unmasked_parts[:, :, :start_pixel, :]) #top_condition
         # g_pixel = pixelwise_loss(gen_imgs_unmasked_parts[:, :, :, :start_pixel], unmasked_parts[:, :, :, :start_pixel]) #left_condition
         g_pixel = pixelwise_loss(gen_imgs_unmasked_parts[:, :, :start_pixel, :], unmasked_parts[:, :, :start_pixel, :])
-        # g_pixel += pixelwise_loss(gen_imgs_unmasked_parts[:, :, start_pixel:, :start_pixel], unmasked_parts[:, :, start_pixel:, :start_pixel]) 
+        g_pixel += pixelwise_loss(gen_imgs_unmasked_parts[:, :, start_pixel:, :start_pixel], unmasked_parts[:, :, start_pixel:, :start_pixel]) 
 
         # Total loss
-        g_loss = 0.8 * g_adv + 0.2 * g_pixel
+        g_loss = 0.2 * g_adv + 0.8 * g_pixel
 
         g_loss.backward()
         optimizer_G.step()
