@@ -158,7 +158,7 @@ for epoch in range(opt.n_epochs):
         g_adv = adversarial_loss(discriminator(gen_imgs), valid)
         # Pixelwise loss
         start_pixel, ms = masked_size
-        start_pixel =opt.img_size - start_pixel[0] # eg:128-112
+        start_pixel = start_pixel[0] # eg:128-112
         ms = ms[0]
         gen_imgs_unmasked_parts = gen_imgs.clone()
         # g_pixel = pixelwise_loss(gen_imgs_unmasked_parts[:, :, :start_pixel, :], unmasked_parts[:, :, :start_pixel, :])
@@ -167,12 +167,12 @@ for epoch in range(opt.n_epochs):
         # g_pixel += pixelwise_loss(gen_imgs_unmasked_parts[:, :, start_pixel+ms:, :], unmasked_parts[:, :, start_pixel+ms:, :])
         # when right and bottom are masked, top and left are conditions
         # g_pixel = pixelwise_loss(gen_imgs_unmasked_parts[:, :, :start_pixel, :], unmasked_parts[:, :, :start_pixel, :]) #top_condition
-        # g_pixel = pixelwise_loss(gen_imgs_unmasked_parts[:, :, :, :start_pixel], unmasked_parts[:, :, :, :start_pixel]) #left_condition
-        g_pixel = pixelwise_loss(gen_imgs_unmasked_parts[:, :, :start_pixel, :], unmasked_parts[:, :, :start_pixel, :])
+         g_pixel = pixelwise_loss(gen_imgs_unmasked_parts[:, :, :, :start_pixel], unmasked_parts[:, :, :, :start_pixel]) #left_condition
+        # g_pixel = pixelwise_loss(gen_imgs_unmasked_parts[:, :, :start_pixel, :], unmasked_parts[:, :, :start_pixel, :])
         # g_pixel += pixelwise_loss(gen_imgs_unmasked_parts[:, :, start_pixel:, :start_pixel], unmasked_parts[:, :, start_pixel:, :start_pixel]) 
 
         # Total loss
-        g_loss = 0.8 * g_adv + 0.2 * g_pixel
+        g_loss = 0.2 * g_adv + 0.8 * g_pixel
 
         g_loss.backward()
         optimizer_G.step()

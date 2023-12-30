@@ -51,7 +51,7 @@ class ImageDataset(Dataset):  # 继承Dataset
         img = img.convert('L')
         if self.transform:
             img = self.transform(img)
-        masked_img, aux = self.apply_right_bot_mask(img)
+        masked_img, aux = self.apply_right_mask(img)
         return img, masked_img, aux
 
     
