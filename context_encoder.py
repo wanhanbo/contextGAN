@@ -150,7 +150,8 @@ for epoch in range(opt.n_epochs):
 
         # Generate a batch of images
         z = Variable(Tensor(np.random.normal(0, 1, (imgs.shape[0], opt.latent_dim))))
-        gen_imgs = generator(masked_imgs, z)
+        # gen_imgs = generator(masked_imgs, z)
+        gen_imgs = generator(masked_imgs) # 新模型在内部处理噪音
 
     
 
@@ -167,7 +168,7 @@ for epoch in range(opt.n_epochs):
         # g_pixel += pixelwise_loss(gen_imgs_unmasked_parts[:, :, start_pixel+ms:, :], unmasked_parts[:, :, start_pixel+ms:, :])
         # when right and bottom are masked, top and left are conditions
         # g_pixel = pixelwise_loss(gen_imgs_unmasked_parts[:, :, :start_pixel, :], unmasked_parts[:, :, :start_pixel, :]) #top_condition
-         g_pixel = pixelwise_loss(gen_imgs_unmasked_parts[:, :, :, :start_pixel], unmasked_parts[:, :, :, :start_pixel]) #left_condition
+        g_pixel = pixelwise_loss(gen_imgs_unmasked_parts[:, :, :, :start_pixel], unmasked_parts[:, :, :, :start_pixel]) #left_condition
         # g_pixel = pixelwise_loss(gen_imgs_unmasked_parts[:, :, :start_pixel, :], unmasked_parts[:, :, :start_pixel, :])
         # g_pixel += pixelwise_loss(gen_imgs_unmasked_parts[:, :, start_pixel:, :start_pixel], unmasked_parts[:, :, start_pixel:, :start_pixel]) 
 
