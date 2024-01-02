@@ -20,7 +20,7 @@ class Generator(nn.Module):
             return layers
 
         def upsample(in_feat, out_feat, normalize=True, dropout=True):
-            layers = [nn.ConvTranspose2d(in_feat, out_feat, 3, stride=2, padding=1)]
+            layers = [nn.ConvTranspose2d(in_feat, out_feat, 3, stride=2, padding=1,output_padding=1)]
             if normalize:
                 layers.append(nn.BatchNorm2d(out_feat, 0.8))
             if dropout:
@@ -59,7 +59,6 @@ class Generator(nn.Module):
 
         z = Variable(torch.cuda.FloatTensor(np.random.normal(0, 1, (self.bs, self.noise_dim))))
         noise = self.l2(z)
-        breakpoint()
         noise_out = noise.view(noise.shape[0], 512, 8, 8)
         decoder_out1=torch.cat((bridge_out, noise_out), dim=1)
         decoder_out1=self.model[23:27](decoder_out1)
