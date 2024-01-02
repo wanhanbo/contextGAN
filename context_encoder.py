@@ -22,7 +22,7 @@ from torchvision import datasets
 from torch.autograd import Variable
 
 from datasets2 import *
-from models import *
+from models_new import *
 
 import torch.nn as nn
 import torch.nn.functional as F
@@ -73,7 +73,7 @@ adversarial_loss = torch.nn.MSELoss()
 pixelwise_loss = torch.nn.L1Loss()
 
 # Initialize generator and discriminator
-generator = Generator(channels=opt.channels)
+generator = Generator(channels=opt.channels,batchsize=opt.batch_size,noise_dim=opt.latent_dim)
 discriminator = Discriminator(channels=opt.channels)
 
 if cuda:

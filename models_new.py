@@ -1,11 +1,14 @@
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
-
+import numpy as np
+from torch.autograd import Variable
 
 class Generator(nn.Module):
-    def __init__(self, channels=3, noise_dim=100):
+    def __init__(self, channels=3, noise_dim=100, batchsize=128):
         super(Generator, self).__init__()
+        self.noise_dim = noise_dim
+        self.bs = batchsize
         self.noise_dim = noise_dim
         def downsample(in_feat, out_feat, normalize=True, dropout=True):
             layers = [nn.Conv2d(in_feat, out_feat, 3, stride=2, padding=1)]
@@ -35,51 +38,52 @@ class Generator(nn.Module):
             *downsample(64, 64), # ->32, layers=4
             *downsample(64, 128), # ->16, layers=4
             *downsample(128, 256), # ->8, layers=4
-            *downsample(256, 512), # ->4, layers=4, concat noise first 
-            nn.Conv2d(1024, 4000, 1), # -> 4 , layers=1
+            *downsample(256, 512), # ->4, layers=4
+            nn.Conv2d(1024, 4000, 1), # -> 4 , layers=1, concat noise first 
             *upsample(4000, 512), # -> 8, layers=4
-            *upsample(512, 256), # -> 16, layers=4, concat noise second
-            *upsample(256, 128), # -> 32, layers=4, concat noise third
-            *upsample(128, 64), # -> 64, layers=4, concat noise forth
-            *upsample(64, 32), # -> 128, layers=4, concat noise fifth 
+            *upsample(1024, 256), # -> 16, layers=4, concat noise second
+            *upsample(512, 128), # -> 32, layers=4, concat noise third
+            *upsample(256, 64), # -> 64, layers=4, concat noise forth
+            *upsample(128, 32), # -> 128, layers=4, concat noise fifth 
             nn.Conv2d(32, channels, 3, 1, 1), # -> 128
             nn.Tanh()
         )
     def forward(self, x):
         # 把噪音生成的过程直接放在了model中，原来是外部生成再传入model
         encoder_out = self.model[:18](x)
-        z = Variable(Tensor(np.random.normal(0, 1, (1, noise_dim)))) # 本来是(imgs.shape[0], noise_dim) imgs.shape[0]是多少？
+        z = Variable(torch.cuda.FloatTensor(np.random.normal(0, 1, (self.bs, self.noise_dim)))) # 本来是(imgs.shape[0], noise_dim) imgs.shape[0]是多少？
         noise = self.l1(z)
         noise_out = noise.view(noise.shape[0], 512, 4, 4)
         encoder_out = torch.cat((encoder_out, noise_out), dim=1)
         bridge_out=self.model[18:23](encoder_out)
 
-        z = Variable(Tensor(np.random.normal(0, 1, (1, noise_dim))))
+        z = Variable(torch.cuda.FloatTensor(np.random.normal(0, 1, (self.bs, self.noise_dim))))
         noise = self.l2(z)
+        breakpoint()
         noise_out = noise.view(noise.shape[0], 512, 8, 8)
         decoder_out1=torch.cat((bridge_out, noise_out), dim=1)
         decoder_out1=self.model[23:27](decoder_out1)
 
-        z = Variable(Tensor(np.random.normal(0, 1, (1, noise_dim))))
+        z = Variable(torch.cuda.FloatTensor(np.random.normal(0, 1, (self.bs, self.noise_dim))))
         noise = self.l3(z)
         noise_out = noise.view(noise.shape[0], 256, 16, 16)
         decoder_out2=torch.cat((decoder_out1, noise_out), dim=1)
         decoder_out2=self.model[27:31](decoder_out2)
 
-        z = Variable(Tensor(np.random.normal(0, 1, (1, noise_dim))))
+        z = Variable(torch.cuda.FloatTensor(np.random.normal(0, 1, (self.bs, self.noise_dim))))
         noise = self.l4(z)
         noise_out = noise.view(noise.shape[0], 128, 32, 32)
         decoder_out3=torch.cat((decoder_out2, noise_out), dim=1)
         decoder_out3=self.model[31:35](decoder_out3)
 
-        z = Variable(Tensor(np.random.normal(0, 1, (1, noise_dim))))
+        z = Variable(torch.cuda.FloatTensor(np.random.normal(0, 1, (self.bs, self.noise_dim))))
         noise = self.l5(z)
         noise_out = noise.view(noise.shape[0], 64, 64, 64)
         decoder_out4=torch.cat((decoder_out3, noise_out), dim=1)
         decoder_out4=self.model[35:39](decoder_out4)
 
         out=self.model[39:](decoder_out4)
-        return out4
+        return out
 
 class Discriminator(nn.Module):
     def __init__(self, channels=3):
