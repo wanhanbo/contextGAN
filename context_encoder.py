@@ -118,8 +118,7 @@ def save_sample(batches_done):
     masked_samples = Variable(masked_samples.type(Tensor))
     
     # Generate inpainted image
-    z0 = Variable(Tensor(np.random.normal(0, 1, (imgs.shape[0], opt.latent_dim))))
-    gen_img = generator(masked_samples, z0)
+    gen_img = generator(masked_samples)
 
     # Save sample
     save_image(samples[:25], "%s/%d_ori.png" % (opt.out_dir, batches_done), nrow=5, normalize=True)
