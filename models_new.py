@@ -51,31 +51,31 @@ class Generator(nn.Module):
     def forward(self, x):
         # 把噪音生成的过程直接放在了model中，原来是外部生成再传入model
         encoder_out = self.model[:18](x)
-        z = Variable(torch.cuda.FloatTensor(np.random.normal(0, 1, (self.bs, self.noise_dim)))) # 本来是(imgs.shape[0], noise_dim) imgs.shape[0]是多少？
+        z = Variable(torch.cuda.FloatTensor(np.random.normal(0, 1, (x.shape[0], self.noise_dim)))) 
         noise = self.l1(z)
         noise_out = noise.view(noise.shape[0], 512, 4, 4)
         encoder_out = torch.cat((encoder_out, noise_out), dim=1)
         bridge_out=self.model[18:23](encoder_out)
 
-        z = Variable(torch.cuda.FloatTensor(np.random.normal(0, 1, (self.bs, self.noise_dim))))
+        z = Variable(torch.cuda.FloatTensor(np.random.normal(0, 1, (x.shape[0], self.noise_dim))))
         noise = self.l2(z)
         noise_out = noise.view(noise.shape[0], 512, 8, 8)
         decoder_out1=torch.cat((bridge_out, noise_out), dim=1)
         decoder_out1=self.model[23:27](decoder_out1)
 
-        z = Variable(torch.cuda.FloatTensor(np.random.normal(0, 1, (self.bs, self.noise_dim))))
+        z = Variable(torch.cuda.FloatTensor(np.random.normal(0, 1, (x.shape[0], self.noise_dim))))
         noise = self.l3(z)
         noise_out = noise.view(noise.shape[0], 256, 16, 16)
         decoder_out2=torch.cat((decoder_out1, noise_out), dim=1)
         decoder_out2=self.model[27:31](decoder_out2)
 
-        z = Variable(torch.cuda.FloatTensor(np.random.normal(0, 1, (self.bs, self.noise_dim))))
+        z = Variable(torch.cuda.FloatTensor(np.random.normal(0, 1, (x.shape[0], self.noise_dim))))
         noise = self.l4(z)
         noise_out = noise.view(noise.shape[0], 128, 32, 32)
         decoder_out3=torch.cat((decoder_out2, noise_out), dim=1)
         decoder_out3=self.model[31:35](decoder_out3)
 
-        z = Variable(torch.cuda.FloatTensor(np.random.normal(0, 1, (self.bs, self.noise_dim))))
+        z = Variable(torch.cuda.FloatTensor(np.random.normal(0, 1, (x.shape[0], self.noise_dim))))
         noise = self.l5(z)
         noise_out = noise.view(noise.shape[0], 64, 64, 64)
         decoder_out4=torch.cat((decoder_out3, noise_out), dim=1)
