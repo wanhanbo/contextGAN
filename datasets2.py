@@ -19,9 +19,15 @@ class ImageDataset(Dataset):  # 继承Dataset
         """Mask right part of image"""
         # Get upper-left pixel coordinate
         i = self.img_size - self.mask_size
-        masked_img = img.clone()  # 或许名字要变一下？
+        masked_img = img.clone()  
         masked_img[:,  : , i:] = 1
         return masked_img, (i, self.mask_size)
+    
+    def apply_left_mask(self, img):
+        """Mask left part of image"""
+        masked_img = img.clone() 
+        masked_img[:,  : , :self.mask_size] = 1
+        return masked_img, (self.mask_size, self.mask_size)
 
     def apply_bot_mask(self, img):
         """Mask bottom part of image"""
@@ -40,6 +46,15 @@ class ImageDataset(Dataset):  # 继承Dataset
 
         return masked_img, (i, self.mask_size)
     
+    def apply_left_bot_mask(self, img):
+        """Mask right and bottom part of image"""
+        # Get upper-left pixel coordinate
+        i = self.img_size - self.mask_size
+        masked_img = img.clone()
+        masked_img[:, i:, :self.mask_size] = 1
+
+        return masked_img, (i, self.mask_size)
+    
 
     def __len__(self):  # 返回整个数据集的大小
         return len(self.images)
@@ -51,7 +66,7 @@ class ImageDataset(Dataset):  # 继承Dataset
         img = img.convert('L')
         if self.transform:
             img = self.transform(img)
-        masked_img, aux = self.apply_right_mask(img)
+        masked_img, aux = self.apply_left_bot_mask(img)
         return img, masked_img, aux
 
     
